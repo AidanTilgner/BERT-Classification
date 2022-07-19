@@ -1,10 +1,21 @@
-import { python } from 'pythonia'
-// Import tkinter
-const tk = await python('tkinter')
-// All Python API access must be prefixed with await
-const root = await tk.Tk()
-// A function call with a $ suffix will treat the last argument as a kwarg dict
-const a = await tk.Label$(root, { text: 'Hello World' })
-await a.pack()
-await root.mainloop()
-python.exit() // Make sure to exit Python in the end to allow node to exit. You can also use process.exit.
+import { py, python, PyClass } from "pythonia";
+const tf = await python("tensorflow");
+
+class KerasCallback extends PyClass {
+  constructor() {
+    super(tf.keras.callbacks.Callback);
+  }
+
+  on_epoch_end(epock, logs) {
+    if (logs.loss < 0.4) {
+      console.log("/nReached 60% accuracy so cancelling training");
+      this.model.stop_training;
+    }
+  }
+}
+
+const mnist = await tf.keras.datasets.fashion_mnist;
+const [[training_images, training_labels], [test_images, test_labels]] =
+  await mnist.load_data;
+
+const trainingImages = await py`${training_images}`;
